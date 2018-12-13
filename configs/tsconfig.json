@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"lib": ["ES2015"],
+		"allowJs": false,
+		"skipLibCheck": false
+	},
+	"include": ["../src/**/*.ts"],
+	"exclude": ["../node_modules"],
+	"types": ["node", "mocha"]
+}

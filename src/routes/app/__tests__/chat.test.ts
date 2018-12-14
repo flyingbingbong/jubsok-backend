@@ -71,13 +71,17 @@ describe('chat router', () => {
 		it('should return 200 with create chatRoom and message', async () => {
 			try {
 				var AESkeys: Array<string> = [ 'key1', 'key2' ];
+				var room: IChatRoomDocument;
 
 				res = await request(this.app)
 					.post(this.url)
 					.set({ 'x-auth-token': accessToken })
 					.send({ nickname: userToChat.nickname, AESkeys })
 					.expect(200);
-				expect((await ChatRoom.find()).length).to.equal(1);
+				room = await ChatRoom.findOne({ users: this.user._id});
+				expect(room).to.not.equal(null);
+				expect(res.body.chatRoomId)
+					.to.equal(AES.encrypt(room._id.toString()));
 				expect((await Message.find()).length).to.equal(1);
 				for (let s of userToChat.sessions) {
 					sinon.assert.calledOnce(wsClients[s._id.toString()].send);

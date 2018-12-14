@@ -9,7 +9,8 @@ import { WsMessageType, AES } from '../../../utils';
 
 interface ICreateChatRoomRequest extends IAuthRequest {
 	userToChat: IUserDocument | null,
-	room: IChatRoomDocument
+	room: IChatRoomDocument,
+	encryptedChatRoomId: string
 }
 
 const msgPrefix: string = 'chatRoom/create';
@@ -65,6 +66,7 @@ const createRoom = async (
 			keys: req.body.AESkeys
 		});
 		await req.room.save();
+		req.encryptedChatRoomId = AES.encrypt(req.room._id.toString());
 		next();
 	} catch (err) {
 		if (err.name === 'ValidationError') {
@@ -90,7 +92,19 @@ const createMessage = async (
 				chatRoomId: req.room._id
 			}
 		);
-		res.status(200).end();
+		next();
+	} catch (err) {
+		next(err);
+	}
+}
+
+const responseChatRoomId = async (
+	req: ICreateChatRoomRequest, res: Response, next: NextFunction
+): Promise<void> => {
+	try {
+		res.status(200).json({
+			chatRoomId: req.encryptedChatRoomId
+		});
 		next();
 	} catch (err) {
 		next(err);
@@ -105,7 +119,7 @@ const sendMessage = async (
 			type: WsMessageType.message,
 			item: {
 				from: req.auth.user.nickname,
-				chatRoomId: AES.encrypt(req.room._id.toString())
+				chatRoomId: req.encryptedChatRoomId
 			}
 		});
 		next();
@@ -119,5 +133,6 @@ export default [
 	checkUserExist,
 	createRoom,
 	createMessage,
+	responseChatRoomId,
 	sendMessage
 ];

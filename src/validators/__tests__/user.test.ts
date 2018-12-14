@@ -197,6 +197,42 @@ describe('user validator', () => {
 		});
 	})
 
+	describe('favoritesContentRegex & interestsContentRegex', () => {
+		it('should return true', async () => {
+			try {
+				const valid: Array<any> = [
+					{ content: '오' },
+					{ content: '오 박사' },
+					{ content: '오박사' },
+					{ content: '오  박사' },
+				];
+				const invalid: Array<any> = [
+					{ content: ' 오' },
+					{ content: '  오' },
+					{ content: '오 ' },
+					{ content: '오  ' },
+					{ content: ' 오박사' },
+					{ content: '오박사 ' },
+					{ content: '오  박사 ' },
+				];
+				for (let s of valid) {
+					expect(await UserValidator.favoritesContentRegex.validator([s]))
+						.to.equal(true);
+					expect(await UserValidator.interestsContentRegex.validator([s.content]))
+						.to.equal(true);
+				}
+				for (let s of invalid) {
+					expect(await UserValidator.favoritesContentRegex.validator([s]))
+						.to.equal(false);
+					expect(await UserValidator.interestsContentRegex.validator([s.content]))
+						.to.equal(false);
+				}
+			} catch (err) {
+				throw err;
+			}
+		})
+	})
+
 	afterEach(async () => {
 		try {
 			await setupTest.resetTestDB();

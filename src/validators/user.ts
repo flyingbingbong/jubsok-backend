@@ -12,6 +12,12 @@ const MAX_INTERESTS_LEN: number = 10;
 const WEEKLY_TASTES_LEN: number = 3;
 const VALID_GENDERS: Array<string> = ['male', 'female'];
 const MAX_SESSION_COUNT: number = 5;
+const regex: any = {
+	nickname: /^[a-zA-Z가-힣0-9_]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
+	favorites: /^(?!\s)[a-zA-Z가-힣0-9_\s]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
+	interests: /^(?!\s)[a-zA-Z가-힣0-9_\s]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
+}
+
 const MSG = {
 	INVALID_NICKNAME_LEN: 'INVALID_NICKNAME_LEN',
 	INVALID_NICKNAME_REGEX: 'INVALID_NICKNAME_REGEX',
@@ -20,9 +26,11 @@ const MSG = {
 	INVALID_FAVORITES_LEN: 'INVALID_FAVORITES_LEN',
 	INVALID_FAVORITES_TOTAL_POINT: 'INVALID_FAVORITES_TOTAL_POINT',
 	INVALID_FAVORITE_POINT: 'INVALID_FAVORITE_POINT',
+	INVALID_FAVORITE_CONTENT: 'INVALID_FAVORITE_CONTENT',
 	FAVORITES_DUPLICATE: 'FAVORITES_DUPLICATE',
 	FAVORITES_NOT_SORTED: 'FAVORITES_NOT_SORTED',
 	INVALID_INTERESTS_LEN: 'INVALID_INTERESTS_LEN',
+	INVALID_INTERESTS_CONTENT: 'INVALID_INTERESTS_CONTENT',
 	INTERESTS_DUPLICATE: 'INTERESTS_DUPLICATE',
 	INVALID_WEEKLY_TASTES_LEN: 'INVALID_WEEKLY_TASTES_LEN',
 	INVALID_WEEKLY_TASTES_VAL: 'INVALID_WEEKLY_TASTES_VAL',
@@ -40,7 +48,7 @@ export const nicknameLen: IValidator = {
 
 export const nicknameRegex: IValidator = {
 	validator: async (v: string): Promise<boolean> => (		
-		/^[a-zA-Z가-힣0-9_]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/.test(v)
+		regex.nickname.test(v)
 	),
 	message: MSG.INVALID_NICKNAME_REGEX
 }
@@ -72,6 +80,13 @@ export const favoritesLength: IValidator = {
 		v.length <= MAX_FAVORITES_LEN
 	),
 	message: MSG.INVALID_FAVORITES_LEN
+}
+
+export const favoritesContentRegex: IValidator = {
+	validator: async (v: Array<IFavorite>): Promise<boolean> => (
+		v.every((fav: IFavorite) => regex.favorites.test(fav.content))
+	),
+	message: MSG.INVALID_FAVORITE_CONTENT
 }
 
 export const favoritesTotalPoint: IValidator = {
@@ -114,6 +129,13 @@ export const interestsLength: IValidator = {
 		v.length <= MAX_INTERESTS_LEN
 	),
 	message: MSG.INVALID_INTERESTS_LEN
+}
+
+export const interestsContentRegex: IValidator = {
+	validator: async (v: Array<string>): Promise<boolean> => (
+		v.every((s: string) => regex.interests.test(s))
+	),
+	message: MSG.INVALID_INTERESTS_CONTENT
 }
 
 export const interestsNotDuplicate: IValidator = {

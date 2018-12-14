@@ -34,6 +34,7 @@ describe('Chat controller', () => {
 			checkUserExist,
 			createRoom,
 			createMessage,
+			responseChatRoomId,
 			sendMessage,
 		}
 		var userToChat: IUserDocument;
@@ -135,6 +136,7 @@ describe('Chat controller', () => {
 					req.userToChat = userToChat;
 					req.body.AESkeys = [ 'key1', 'key2' ];
 					await createRoomFunc(req, res, next);
+					expect(req.encryptedChatRoomId).to.not.equal(undefined);
 					sinon.assert.notCalled(res.status);
 					sinon.assert.calledOnce(next);
 				} catch (err) {
@@ -165,6 +167,22 @@ describe('Chat controller', () => {
 					req.userToChat = userToChat;
 					req.room = new ChatRoom();
 					await createMessage(req, res, next);
+					sinon.assert.notCalled(res.status);
+					sinon.assert.calledOnce(next);
+				} catch (err) {
+					throw err;
+				}
+			});
+		})
+
+		describe('responseChatRoomId', () => {
+			const responseChatRoomId: Function = ChatController.createRoom[
+				createRoom.responseChatRoomId
+			];
+
+			it('should success', async () => {
+				try {
+					await responseChatRoomId(req, res, next);
 					sinon.assert.calledWith(res.status, 200);
 					sinon.assert.calledOnce(next);
 				} catch (err) {

@@ -57,7 +57,6 @@ describe('user validator', () => {
 			});
 		})
 
-
 		describe('nicknameUnique', () => {
 			const nicknameUnique: IValidator = UserValidator.nicknameUnique;
 

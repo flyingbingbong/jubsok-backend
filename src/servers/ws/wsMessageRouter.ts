@@ -56,7 +56,7 @@ export class MessageRouter {
 
 	private errorHandler(ws: IWsClient, message: string): void {
 		// mail(err)
-		throw message;
+		throw Error(message);
 	}
 }
 

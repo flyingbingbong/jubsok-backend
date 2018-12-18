@@ -8,7 +8,7 @@ import { UserRouter } from '../';
 import * as jwt from 'jsonwebtoken';
 import { testHelper } from '../helpers';
 import {
-	User, IUserDocument, activeUserSeconds, IChatRoomDocument, ChatRoom
+	User, IUserDocument, activeUserSeconds, ChatRoom, Word
 } from '../../../models';
 
 const expect = chai.expect;
@@ -140,7 +140,7 @@ describe('user router', () => {
 				res = await request(this.app)
 					.get(this.url)
 					.set({ 'x-auth-token': accessToken })
-					.query({ gender: 'male', weeklyTastes: [ 1,0, 0 ] })
+					.query({ gender: 'male', weeklyTastes: [ 1, 0, 0 ] })
 					.expect(200);
 				expect(res.body.items.length).to.equal(0);
 			} catch (err) {
@@ -248,6 +248,22 @@ describe('user router', () => {
 				this.url = '/user/profile';
 				this.app = setupTest.mockApp();
 				this.app.use('/user', UserRouter);
+				this.user.favorites = [
+					{ content: '커피', point: 3 },
+					{ content: '유자차', point: 3 },
+				];
+				this.user.interests = [
+					'밀크티 라떼',
+					'컵',
+				];
+				await this.user.save();
+				await Word.insertMany([
+					{ content: '머그샷', freq: 2 },
+					{ content: '컵', freq: 1 },
+					{ content: '커피', freq: 9 },
+					{ content: '유자차', freq: 1 },
+					{ content: '밀크티 라떼', freq: 8 },
+				]);
 			} catch (err) {
 				throw err;
 			}
@@ -258,11 +274,10 @@ describe('user router', () => {
 		it('should return 200 with update profile', async () => {
 			try {
 				const input: any = {
-					interests: [ '스폰지밥', '징징이', '뚱이' ],
+					interests: [ '머그샷', '커피', '녹차 라떼' ],
 					favorites: [
-						{ content: 'TypeScript', point: 4 },
-						{ content: 'Python', point: 3 },
-						{ content: 'Ruby', point: 2 },
+						{ content: '녹차 라떼', point: 4 },
+						{ content: '커피', point: 3 }
 					],
 					weeklyTastes: [ 0, 1, 1 ]
 				}
@@ -279,6 +294,12 @@ describe('user router', () => {
 				expect(user.favorites.every((v, i) => (
 					v.content === input.favorites[i].content
 				))).to.equal(true);
+				expect((await Word.findOne({ content: '커피' })).freq).to.equal(9);
+				expect((await Word.findOne({ content: '유자차' }))).to.equal(null);
+				expect((await Word.findOne({ content: '컵' }))).to.equal(null);
+				expect((await Word.findOne({ content: '밀크티 라떼' })).freq).to.equal(7);
+				expect((await Word.findOne({ content: '머그샷' })).freq).to.equal(3);
+				expect((await Word.findOne({ content: '녹차 라떼' })).freq).to.equal(1);
 			} catch (err) {
 				throw err;
 			}

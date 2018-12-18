@@ -14,8 +14,7 @@ const VALID_GENDERS: Array<string> = ['male', 'female'];
 const MAX_SESSION_COUNT: number = 5;
 const regex: any = {
 	nickname: /^[a-zA-Z가-힣0-9_]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
-	favorites: /^(?!\s)[a-zA-Z가-힣0-9_\s]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
-	interests: /^(?!\s)[a-zA-Z가-힣0-9_\s]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9_]*$/,
+	word: /^(?!\s)[a-zA-Z가-힣0-9!?@#$&()\-.+,/\"\s]*[a-zA-Z가-힣0-9][a-zA-Z가-힣0-9!?@#$&()\-.+,/\"]*$/
 }
 
 const MSG = {
@@ -84,7 +83,7 @@ export const favoritesLength: IValidator = {
 
 export const favoritesContentRegex: IValidator = {
 	validator: async (v: Array<IFavorite>): Promise<boolean> => (
-		v.every((fav: IFavorite) => regex.favorites.test(fav.content))
+		v.every((fav: IFavorite) => regex.word.test(fav.content))
 	),
 	message: MSG.INVALID_FAVORITE_CONTENT
 }
@@ -133,7 +132,7 @@ export const interestsLength: IValidator = {
 
 export const interestsContentRegex: IValidator = {
 	validator: async (v: Array<string>): Promise<boolean> => (
-		v.every((s: string) => regex.interests.test(s))
+		v.every((s: string) => regex.word.test(s))
 	),
 	message: MSG.INVALID_INTERESTS_CONTENT
 }
@@ -192,13 +191,15 @@ export const validationMap = {
 	],
 	favorites: [
 		favoritesLength,
+		favoritesContentRegex,
 		favoritePoint,
 		favoritesTotalPoint,
 		favoritesNotDuplicate,
 	],
 	interests: [
 		interestsLength,
-		interestsNotDuplicate
+		interestsContentRegex,
+		interestsNotDuplicate,
 	],
 	weeklyTastes: [
 		weeklyTastesLen,

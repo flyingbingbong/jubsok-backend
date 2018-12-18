@@ -5,6 +5,7 @@ import { Message, IMessageDocument, messageTypes } from './message';
 import { Notice, INoticeDocument } from './notice';
 import { Report, IReportDocument } from './report';
 import { WeeklyTaste, IWeeklyTasteDocument } from './weeklyTaste';
+import { Word, IWordDocument } from './word';
 
 const ENV: any = process.env;
 const DB_ADDRESS: string = (
@@ -24,5 +25,6 @@ export {
 	Message, IMessageDocument, messageTypes,
 	Notice, INoticeDocument,
 	Report, IReportDocument,
-	WeeklyTaste, IWeeklyTasteDocument
+	WeeklyTaste, IWeeklyTasteDocument,
+	Word, IWordDocument
 };

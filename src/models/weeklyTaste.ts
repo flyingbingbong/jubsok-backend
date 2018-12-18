@@ -33,5 +33,5 @@ WeeklyTasteSchema.statics.getRecent = async (): Promise<Array<Array<string>>> =>
 	}
 }
 
-export const WeeklyTaste:IWeeklyTasteModel =
+export const WeeklyTaste: IWeeklyTasteModel =
 	connection.model<IWeeklyTasteDocument, IWeeklyTasteModel>('weekly_tastes', WeeklyTasteSchema);

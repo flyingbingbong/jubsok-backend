@@ -5,11 +5,12 @@ import { IMessage } from './message.d';
 import { INotice } from './notice.d';
 import { IReport } from './report.d';
 import { IWeeklyTaste } from './weeklyTaste.d';
+import { IWord } from './word.d';
 import { IValidateMsgProps, IValidator } from './models.d';
 import { IRedisClient } from './redis.d';
 import {
 	IWss, IWsClient, IMessageRouteWs, IClientManageWs,
-	IWsUser, IWsData,
+	IWsData,
 	IWsRequest, IWsAuthRequest,
 } from './ws.d';
 import {
@@ -24,10 +25,11 @@ export {
 	INotice,
 	IReport,
 	IWeeklyTaste,
+	IWord,
 	IValidateMsgProps, IValidator,
 	IRequest, IAuthRequest, IApp,
 	IRedisClient,
 	IWss, IWsClient, IMessageRouteWs, IClientManageWs,
-	IWsUser, IWsData,
+	IWsData,
 	IWsRequest, IWsAuthRequest,
 };

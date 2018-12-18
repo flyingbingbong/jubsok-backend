@@ -67,6 +67,7 @@ describe('WeeklyTaste controller', () => {
 
 	afterEach(async () => {
 		try {
+			sinon.restore();
 			await setupTest.resetTestDB();
 		} catch (err) {
 			throw err;

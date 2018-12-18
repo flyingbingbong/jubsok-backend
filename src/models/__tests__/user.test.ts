@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { SinonFakeTimers } from 'sinon';
-import { User, IUserDocument, Message, messageTypes, Friend } from '../';
+import { User, IUserDocument, Message, messageTypes, Friend, IWordDocument, Word } from '../';
 import * as setupTest from '../../setupTest';
 import { IFavorite, IUser, ISearchedUser } from '../../types';
 
@@ -197,69 +197,70 @@ describe('User model', () => {
 		})
 	})
 
-	it('should get profile', async () => {
-		try {
-			const profile: IUserDocument = user.getProfile();
-
-			expect(profile).to.not.be.null;
-			expect(profile.__v).to.be.undefined;
-			expect(profile.updatedAt).to.be.undefined;
-			expect(profile._id).to.be.undefined;
-		} catch (err) {
-			throw err;
-		}
-	});
-
-	it('should edit profile', async () => {
-		try {
-			var updatedUser: IUserDocument;
-			var currentFavorite: IFavorite;
-			const input = {
-				comment: 'bar',
-				favorites: [
-					{ content: 'dog', point: 4 },
-					{ content: 'cat', point: 2 },
-					{ content: 'bird', point: 5 },
-				],
-				interests: [
-					'blockchain',
-					'baseball',
-					'milk'
-				],
-				weeklyTastes: [0, -1, 0]
-			};
-
-			await user.updateProfile(input);
-			updatedUser = await User.findOne({
-				'facebookProvider.id': user.facebookProvider.id
-			}).lean();
-			expect(updatedUser).to.deep.include(input);
-			currentFavorite = updatedUser.favorites[0];
-			for (let i=1; i < updatedUser.favorites.length; i++) {
-				expect(currentFavorite.point).to.gt(updatedUser.favorites[i].point);
-				currentFavorite = updatedUser.favorites[i];
+	describe('getProfile', () => {
+		it('should get profile', async () => {
+			try {
+				const profile: IUserDocument = user.getProfile();
+	
+				expect(profile).to.not.be.null;
+				expect(profile.__v).to.be.undefined;
+				expect(profile.updatedAt).to.be.undefined;
+				expect(profile._id).to.be.undefined;
+			} catch (err) {
+				throw err;
 			}
-		} catch (err) {
-			throw err;
-		}
+		});
 	})
 
-	it('should not edit profile', async () => {
-		try {
-			const input = {
-				nickname: 'foo!',
-				comment: 'bar'
-			};
+	describe('updateProfile', () => {
+		it('should edit profile', async () => {
 			try {
-				await user.updateProfile(input);
-				throw Error;
+				var updatedUser: IUserDocument;
+				var currentFavorite: IFavorite;
+				const input = {
+					comment: 'bar',
+					favorites: [
+						{ content: 'dog', point: 4 },
+						{ content: 'cat', point: 2 },
+						{ content: 'bird', point: 5 },
+					],
+					interests: [
+						'blockchain',
+						'baseball',
+						'milk'
+					],
+					weeklyTastes: [0, -1, 0]
+				};
+	
+				updatedUser = (await user.updateProfile(input)).toObject();
+				expect(updatedUser).deep.include(input);
+				currentFavorite = updatedUser.favorites[0];
+				for (let i=1; i < updatedUser.favorites.length; i++) {
+					expect(currentFavorite.point).to.gt(updatedUser.favorites[i].point);
+					currentFavorite = updatedUser.favorites[i];
+				}
 			} catch (err) {
-				expect(err.name).to.equal('ValidationError');
+				throw err;
 			}
-		} catch (err) {
-			throw err;
-		}
-	});
+		})
+
+		it('should not edit profile', async () => {
+			try {
+				const input = {
+					nickname: 'foo!',
+					comment: 'bar'
+				};
+				try {
+					await user.updateProfile(input);
+					throw Error;
+				} catch (err) {
+					expect(err.name).to.equal('ValidationError');
+				}
+			} catch (err) {
+				throw err;
+			}
+		});
+	})
 	
 	describe('search', async () => {
 		const pageSize: number = 5;

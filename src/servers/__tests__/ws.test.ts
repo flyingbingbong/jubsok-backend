@@ -86,6 +86,31 @@ describe('ws server', () => {
 							[type]: [ f1, f2 ]
 						}
 						await router.handle(req, data, 'msgPrefix');
+						throw Error;
+					} catch (err) {
+						if (err.message === 'msgPrefix/err') {
+							sinon.assert.calledOnce(signal);
+							sinon.assert.notCalled(f2);
+							return
+						}
+						throw err;
+					}
+				});
+
+				it('should not call next function when next() is not called', async () => {
+					try {
+						const data: IWsData = <IWsData>{ type };
+						var req: any = { ws };
+						var f1: Function = (req, data, next) => {
+							req.foo = 1;
+							signal();
+						};
+						var f2: SinonSpy = sinon.spy();
+		
+						router.stackMap = {
+							[type]: [ f1, f2 ]
+						}
+						await router.handle(req, data, 'msgPrefix');
 						sinon.assert.calledOnce(signal);
 						sinon.assert.notCalled(f2);
 					} catch (err) {

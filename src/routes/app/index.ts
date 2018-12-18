@@ -5,6 +5,7 @@ import ChatRouter from './chat';
 import FriendRouter from './friend';
 import NoticeRouter from './notice';
 import WeeklyTasteRouter from './weeklyTaste';
+import WordRouter from './word';
 
 export {
 	AuthRouter,
@@ -14,4 +15,5 @@ export {
 	FriendRouter,
 	NoticeRouter,
 	WeeklyTasteRouter,
+	WordRouter,
 }

@@ -10,9 +10,10 @@ import { Message } from './message';
 export interface IUserDocument extends IUser, Document {
 	toJSON(): IUserDocument,
 	getProfile(): IUserDocument,
-	updateProfile(input: any): Promise<void>,
+	updateProfile(input: any): Promise<IUserDocument>,
 	wsSend(wsClients: any, message: any): void,
 	hasOtherActiveSession(currentSession: string, clients: any): boolean,
+	updateWords(newWords: Array<string>): Promise<void>,
 };
 export interface IUserModel extends Model<IUserDocument> {
 	facebookLogin(
@@ -38,11 +39,13 @@ const {
 	nicknameRegex,
 	nicknameUnique,
 	favoritesLength,
+	favoritesContentRegex,
 	favoritesTotalPoint,
 	favoritePoint,
 	favoritesNotDuplicate,
 	favoritesSorted,
 	interestsLength,
+	interestsContentRegex,
 	interestsNotDuplicate,
 	weeklyTastesLen,
 	weeklyTastesVal,
@@ -83,6 +86,7 @@ const UserSchema: Schema = new Schema({
 		type: [{ content: String, point: Number, _id: false }],
 		validate: [
 			favoritesLength,
+			favoritesContentRegex,
 			favoritesTotalPoint,
 			favoritePoint,
 			favoritesNotDuplicate,
@@ -93,6 +97,7 @@ const UserSchema: Schema = new Schema({
 		type: [ String ],
 		validate: [
 			interestsLength,
+			interestsContentRegex,
 			interestsNotDuplicate
 		]
 	},
@@ -231,17 +236,17 @@ UserSchema.methods.getProfile = function(): IUserDocument {
 	return user;
 }
 
-UserSchema.methods.updateProfile = async function(input: any): Promise<void> {
+UserSchema.methods.updateProfile = async function(input: any): Promise<IUserDocument> {
 	try {
 		if (input.favorites && Array.isArray(input.favorites)) {
 			input.favorites = input.favorites.sort((a: IFavorite, b: IFavorite) => (
 				(a.point > b.point) ? -1 : 1 // sort favorites by point DESC
 			));
 		}
-		await User.updateOne(
+		return await User.findOneAndUpdate(
 			{ _id: this._id },
 			{ $set: input },
-			{ runValidators: true }
+			{ runValidators: true, new: true }
 		);
 	} catch (err) {
 		throw err;

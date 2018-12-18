@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 import { SinonStub, SinonSpy, SinonFakeTimers } from 'sinon';
-import { User, IUserDocument, activeUserSeconds } from '../../../models';
+import { User, IUserDocument, activeUserSeconds, IWordDocument, Word } from '../../../models';
 import * as sinon from 'sinon';
 import { UserController } from '../';
 import * as setupTest from '../../../setupTest';
@@ -53,8 +53,26 @@ describe('User controller', () => {
 	describe('updateProfile', async () => {
 		enum updateProfile {
 			checkInput=0,
-			update
+			assignWordsBeforeUpdate,	
+			updateProfile,
+			updateWords,
 		}
+
+		beforeEach(async () => {
+			try {
+				req.auth.user.favorites = [
+					{ content: '커피', point: 3 },
+					{ content: '유자차', point: 3 },
+				];
+				req.auth.user.interests = [
+					'밀크티 라떼',
+					'컵',
+				];
+				await req.auth.user.save();
+			} catch (err) {
+				throw err;
+			}
+		})
 
 		describe('checkInput', () => {
 			const checkInput: Function = UserController.updateProfile[
@@ -72,7 +90,7 @@ describe('User controller', () => {
 				}
 			});
 
-			it('should return 400', async () => {
+			it('should return 400 when gender already fixed', async () => {
 				try {
 					req.body = { gender: 'female' };
 					await checkInput(req, res, next);
@@ -82,38 +100,161 @@ describe('User controller', () => {
 					throw err;
 				}
 			});
+
+			it('should return 400 when nickname already fixed', async () => {
+				try {
+					req.body = { nickname: 'bar' };
+					await checkInput(req, res, next);
+					sinon.assert.calledWith(res.status, 400);
+					sinon.assert.notCalled(next);
+				} catch (err) {
+					throw err;
+				}
+			});
+
+			it('should return 400 when nickname already exist', async () => {
+				try {
+					var alreadyExistUser: IUserDocument
+						= await User.create({ nickname: 'bar' });
+
+					req.auth.user.nickname = undefined;
+					await req.auth.user.save();
+					req.body = { nickname: alreadyExistUser.nickname };
+					await checkInput(req, res, next);
+					sinon.assert.calledWith(res.status, 400);
+					sinon.assert.notCalled(next);
+				} catch (err) {
+					throw err;
+				}
+			});
 		})
 
-		describe('update', () => {
-			const update: Function = UserController.updateProfile[
-				updateProfile.update
+		describe('assignWordsBeforeUpdate', () => {
+			const assignWordsBeforeUpdate: Function = UserController.updateProfile[
+				updateProfile.assignWordsBeforeUpdate
 			];
 
-			it('should update', async () => {
+			it('should assign req.oldWords when update favorites', async () => {
+				try {
+					req.body = {
+						favorites: [
+							{ content: '커피', point: 3 },
+							{ content: '유자차', point: 3 },
+						],
+					};
+					await assignWordsBeforeUpdate(req, res, next);
+					expect(Array.isArray(req.oldWords)).to.equal(true);
+					expect(req.oldWords.length).to.equal(
+						req.auth.user.favorites.length + req.auth.user.interests.length
+					);
+					sinon.assert.calledOnce(next);
+				} catch (err) {
+					throw err;
+				}
+			});
+
+			it('should assign req.oldWords when update interests', async () => {
+				try {
+					req.body = {
+						interests: [
+							'빼빼로', '메론'
+						]
+					};
+					await assignWordsBeforeUpdate(req, res, next);
+					expect(Array.isArray(req.oldWords)).to.equal(true);
+					expect(req.oldWords.length).to.equal(
+						req.auth.user.favorites.length + req.auth.user.interests.length
+					);
+					sinon.assert.calledOnce(next);
+				} catch (err) {
+					throw err;
+				}
+			});
+
+			it('should not assign req.oldWords when no interests favorites update', async () => {
+				try {
+					await assignWordsBeforeUpdate(req, res, next);
+					expect(req.oldWords).to.equal(undefined);
+					sinon.assert.calledOnce(next);
+				} catch (err) {
+					throw err;
+				}
+			});
+		})
+
+		describe('updateProfile', () => {
+			const updateProfileFunc: Function = UserController.updateProfile[
+				updateProfile.updateProfile
+			];
+
+			it('should updateProfile', async () => {
 				try {
 					req.body = { interests: [ '스폰지', '송' ] };
-					await update(req, res, next);
+					await updateProfileFunc(req, res, next);
+					expect(req.auth.user.interests).to.deep.equal(req.body.interests);
+					sinon.assert.notCalled(res.status);
+					sinon.assert.calledOnce(next);
+				} catch (err) {
+					throw err;
+				}
+			})
+		});
+
+		describe('updateWords', () => {
+			const updateWords: Function = UserController.updateProfile[
+				updateProfile.updateWords
+			];
+
+			beforeEach(async () => {
+				try {
+					req.auth.user.favorites = [
+						{ content: '커피', point: 3 },
+						{ content: '유자차', point: 3 },
+					];
+					req.auth.user.interests = [
+						'밀크티 라떼',
+						'컵',
+					];
+					await req.auth.user.save();
+					await Word.insertMany([
+						{ content: '머그샷', freq: 2 },
+						{ content: '컵', freq: 1 },
+						{ content: '커피', freq: 9 },
+						{ content: '유자차', freq: 1 },
+						{ content: '밀크티 라떼', freq: 8 },
+					]);
+				} catch (err) {
+					throw err;
+				}
+			})
+	
+			it('should update words', async () => {
+				try {
+					req.oldWords = req.auth.user.favorites
+						.map(f => f.content)
+						.concat(req.auth.user.interests);
+					req.auth.user.favorites = [
+						{ content: '녹차 라떼', point: 4 },
+						{ content: '커피', point: 3 }
+					]
+					req.auth.user.interests = [
+						'머그샷', '커피', '녹차 라떼'
+					];
+					await req.auth.user.save();
+					await updateWords(req, res, next);
+					expect((await Word.findOne({ content: '커피' })).freq).to.equal(9);
+					expect((await Word.findOne({ content: '유자차' }))).to.equal(null);
+					expect((await Word.findOne({ content: '컵' }))).to.equal(null);
+					expect((await Word.findOne({ content: '밀크티 라떼' })).freq).to.equal(7);
+					expect((await Word.findOne({ content: '머그샷' })).freq).to.equal(3);
+					expect((await Word.findOne({ content: '녹차 라떼' })).freq).to.equal(1);
 					sinon.assert.calledWith(res.status, 200);
 					sinon.assert.calledOnce(next);
 				} catch (err) {
 					throw err;
 				}
 			})
-
-			it('should return 400 when validation error', async () => {
-				try {
-					const newUser: IUserDocument = new User({ nickname: 'shrek' });
-
-					await newUser.save();
-					req.body = { nickname: newUser.nickname };
-					await update(req, res, next);
-					sinon.assert.calledWith(res.status, 400);
-					sinon.assert.notCalled(next);
-				} catch (err) {
-					throw err;
-				}
-			})
-		});
+		})
 	});
 	
 	describe('nicknameRequired', () => {

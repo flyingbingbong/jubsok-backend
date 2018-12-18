@@ -1,4 +1,4 @@
-import { IClientManageWs, ISession, IWsUser, IWsClient } from '../../types';
+import { IClientManageWs, ISession, IWsClient } from '../../types';
 import { IUserDocument, User } from '../../models';
 import * as jwt from 'jsonwebtoken';
 import { parse as urlParse } from 'url';

@@ -1,5 +1,4 @@
 import { IWsData, IWsAuthRequest } from '../../../types';
-import { User } from '../../../models';
 
 export default async function(
 	req: IWsAuthRequest, data: IWsData['data'], next: Function

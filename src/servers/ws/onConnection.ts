@@ -1,6 +1,5 @@
-import { IWss, IWsClient, IWsUser } from '../../types';
+import { IWss, IWsClient } from '../../types';
 import { WsMessageType } from '../../utils';
-import { User, IUserDocument } from '../../models';
 import onMessageCb from './onMessage';
 import onCloseCb from './onClose';
 
